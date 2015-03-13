@@ -19,15 +19,43 @@ class Player
 		line_break
 	end
 
+	def id_is
+		@id
+	end
+
+	def name_is
+		@name
+	end
+
 	def weapon_is
 		@weapon
+	end
+end
+
+class Square
+	def initialize(id)
+		@id = id
+		@contents = id
+		@occupied = false
 	end
 
 	def id_is
 		@id
 	end
-end
 
+	def contents_are
+		@contents
+	end
+
+	def occupied?
+		@occupied
+	end
+
+	def find_by_id(id)
+		# ?
+	end
+
+end
 # --------------------------------- FUNCTIONS ---------------------------------
 def line_break
 	puts ""
@@ -69,6 +97,10 @@ def number_of_players
 end
 
 def view_grid
+	9.times do |i|
+		text = People.find_by_id(i)
+	end
+
 	puts "---------"
 	puts "[#{}][#{}][#{}]"
 	puts "[#{}][#{}][#{}]"
@@ -113,7 +145,7 @@ def choose_name(id)
 end
 
 def choose_weapon(name)
-	puts "--Alright #{name}, choose your weapon. Any non-numerical character will do."
+	puts "--Alright #{name}, choose your weapon. Any non-numeric character will do."
 	response = gets.chomp
 
 	if response == "" || response == " "
@@ -163,8 +195,18 @@ elsif type_of_game == 2
 	player_1 = create_player(1, nobody.weapon_is)
 	player_2 = create_player(2, player_1.weapon_is)
 
+	# Take care of players with the same name
+	if player_1.name_is == player_2.name_is
+		player_2.instance_variable_set(:@name, "#{player_2.name_is} II")
+	end
+
 	player_1.index
 	player_2.index
+
+	# Create squares for grid
+	9.times do |sq|
+		Square.new(i)
+	end
 
 	first_grid
 end

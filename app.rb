@@ -11,6 +11,21 @@ class Player
 		@name = name
 		@weapon = weapon
 	end
+
+	def index
+		puts "Player #{@id}:"
+		puts "  Your name is #{@name}."
+		puts "  Your weapon is a \"#{@weapon}\"."
+		line_break
+	end
+
+	def weapon_is
+		@weapon
+	end
+
+	def id_is
+		@id
+	end
 end
 
 # --------------------------------- FUNCTIONS ---------------------------------
@@ -54,7 +69,6 @@ def number_of_players
 end
 
 def view_grid
-	line_break
 	puts "---------"
 	puts "[#{}][#{}][#{}]"
 	puts "[#{}][#{}][#{}]"
@@ -64,19 +78,33 @@ def view_grid
 end
 
 def first_grid
-	puts "Now, imagine a grid..."
+	puts "Now, imagine a grid."
+	puts "--(Hit enter when you've done so...)"
+	gets
 	view_grid
 	puts "...great job."
+	line_break
 end
 
-def create_player(id)
-	name = choose_name(id)
-	line_break
+
+def create_player(id, other_players_weapon, name="")
+	if name == ""
+		name = choose_name(id)
+		line_break
+	end
 
 	weapon = choose_weapon(name)
 	line_break
 	
-	Player.new(id, name, weapon)
+	# Prevents Player being created without weapon, due to unsupported or duplicate weapon
+	if weapon_exists?(weapon) && weapon != other_players_weapon
+		Player.new(id, name, weapon)
+	elsif weapon_exists?(weapon) && weapon == other_players_weapon
+		puts "Holdup holdup holdup. You can't have the same weapon!"
+		create_player(id, other_players_weapon, name)
+	else
+		create_player(id, other_players_weapon, name)
+	end
 end
 
 def choose_name(id)
@@ -86,17 +114,29 @@ end
 
 def choose_weapon(name)
 	puts "--Alright #{name}, choose your weapon. Any non-numerical character will do."
-	weapon = gets.chomp.slice(0)
+	response = gets.chomp
 
-	if weapon.is_i?
-		puts "Nah. No numbers."
-		choose_weapon(name)
-	elsif weapon == "" || weapon == " "
+	if response == "" || response == " "
 		puts "Sorry, invisible weapons don't count."
 		choose_weapon(name)
+	else
+		response = response.slice(0)
+		if response.is_i?
+			line_break
+			puts "Nah. No numbers."
+			choose_weapon(name)
+		else
+			weapon = response
+		end
 	end
+end
 
-	weapon
+def weapon_exists?(weapon)
+	if weapon != ""
+		true
+	else
+		false
+	end
 end
 
 # --------------------------------- STORY STARTS HERE ---------------------------------
@@ -112,10 +152,19 @@ puts "--How many players? 1 or 2?"
 type_of_game = number_of_players.to_i
 
 
+# The following instance of Player creates an empty player, aids in preventing duplicates
+nobody = Player.new(0, "", "")
+
+# Game starts in here
 if type_of_game == 1
 	# One-player biz goes here
 elsif type_of_game == 2
 	# Two-Player game
-	create_player(1)
-	Player.all
+	player_1 = create_player(1, nobody.weapon_is)
+	player_2 = create_player(2, player_1.weapon_is)
+
+	player_1.index
+	player_2.index
+
+	first_grid
 end

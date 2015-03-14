@@ -56,7 +56,7 @@ class Square
 	end
 
 end
-# --------------------------------- FUNCTIONS ---------------------------------
+# --------------------------------- METHODS ---------------------------------
 def line_break
 	puts ""
 end
@@ -96,28 +96,51 @@ def number_of_players
 	end
 end
 
-def view_grid
-	9.times do |i|
-		text = People.find_by_id(i)
+def create_grid
+	# Generates initial grid as an array with Squares
+
+	grid_array = []
+	9.times do |id|
+		new_square = Square.new(id)
+		grid_array << new_square
+	end
+	grid_array
+end
+
+def view_grid(arr)
+	# Displays dynamic grid
+	
+	puts "---------"
+
+	arr.each do |i|
+		current_id = i.instance_variable_get(:@id)
+
+		# Create rows where appropriate
+		if current_id == 0 || current_id == 3 || current_id == 6
+			# Square@id == arr.index
+			i_plus_1 = arr[ current_id + 1 ]
+			i_plus_2 = arr[ current_id + 2 ]
+			
+			puts "[#{i.instance_variable_get(:@contents)}][#{i_plus_1.instance_variable_get(:@contents)}][#{i_plus_2.instance_variable_get(:@contents)}]"
+		end
 	end
 
 	puts "---------"
-	puts "[#{}][#{}][#{}]"
-	puts "[#{}][#{}][#{}]"
-	puts "[#{}][#{}][#{}]"
-	puts "---------"
 	line_break
 end
 
-def first_grid
-	puts "Now, imagine a grid."
-	puts "--(Hit enter when you've done so...)"
+def first_grid(arr)
+	puts "Now, imagine a tic-tac-toe board..."
+	puts "--Hit enter when you think you've got a good one."
 	gets
-	view_grid
+	view_grid(arr)
 	puts "...great job."
-	line_break
+	puts "It's swell. And super easy to use: on your turn, just select the number corresponding to the square you want to slay. I mean claim."
+	puts "--Got it? Hit enter if you're ready."
+	gets
 end
 
+# •••• CREATE_PLAYER ••••
 
 def create_player(id, other_players_weapon, name="")
 	if name == ""
@@ -171,6 +194,38 @@ def weapon_exists?(weapon)
 	end
 end
 
+# •••• TAKE_TURN ••••
+
+def take_turn(player)
+	puts "It's your turn #{player.instance_variable_get(:@name)}."
+	choice = get_choice
+	
+	puts "You choose #{choice}"
+	# Select instance from choice
+end
+
+def get_choice
+	puts "--Which square do you choose?"
+	choice = gets.chomp
+
+	if invalid_choice?(choice)
+		line_break
+		puts "Sorry, that choice is invalid. Try again!"
+		get_choice
+	else
+		choice
+	end
+end
+
+def invalid_choice?(choice)
+	# Various invalid choices
+	if choice.is_i? && choice.to_i > -1 && choice.to_i < 9 
+		false
+	else
+		true
+	end
+end
+
 # --------------------------------- STORY STARTS HERE ---------------------------------
 line_break
 puts "[**Awesome theme music**]"
@@ -186,8 +241,9 @@ type_of_game = number_of_players.to_i
 
 # The following instance of Player creates an empty player, aids in preventing duplicates
 nobody = Player.new(0, "", "")
+game_over = false
 
-# Game starts in here
+# Game starts here
 if type_of_game == 1
 	# One-player biz goes here
 elsif type_of_game == 2
@@ -200,13 +256,23 @@ elsif type_of_game == 2
 		player_2.instance_variable_set(:@name, "#{player_2.name_is} II")
 	end
 
+	# Display player profiles
 	player_1.index
 	player_2.index
 
-	# Create squares for grid
-	9.times do |sq|
-		Square.new(i)
-	end
+	# Build tic-tac-toe board
+	board = create_grid
+	first_grid(board)
 
-	first_grid
+	# Take turns
+	turn_counter = 0
+	while !game_over do
+		if turn_counter.even?
+			player = player_1
+		else
+			player = player_2
+		end
+		take_turn(player)
+		game_over = true
+	end
 end

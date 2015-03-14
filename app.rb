@@ -294,14 +294,15 @@ end
 
 def play_game(player)
 	game_over = false
-
 	line_break
+
+	# Select game mode
 	puts "Will you be playing with a friend, or against the computer?"
 	puts "--Enter 2 if you've got a friend."
 	puts "--Enter 1 if the computer is your friend."
 	type_of_game = number_of_players.to_i
 
-	# Game starts here
+
 	if type_of_game == 1
 		# One-player biz goes here
 	elsif type_of_game == 2
@@ -323,7 +324,7 @@ def play_game(player)
 		first_grid(board)
 
 		# Take turns
-		turn_counter = 0
+		turn_counter = 0  # Controls while loop
 		
 		while !game_over do
 			# Determine whose turn it is
@@ -360,7 +361,8 @@ def play_game(player)
 		else
 			puts "Ok. Thanks for playing!"
 			line_break
-			puts "[**Awesome theme music fades**] "
+			puts "[**Awesome theme music fades**]"
+			line_break
 		end
 	end	
 end
@@ -370,10 +372,10 @@ line_break
 puts "[**Awesome theme music**]"
 line_break
 
-puts "Hey! Welcome to tic-tac-toe."
+puts "Hi! Welcome to tic-tac-toe."
 
-# "nobody" aids in preventing duplicate weapons; see player_1 assignment
-# Essentially, create_player must always check for another weapon
+# Create first player
+# "nobody" aids in preventing duplicate weapons; see player_1 assignment; essentially, create_player must always carry another Player's weapon
 nobody = Player.new(0, "", "")
 player_1 = create_player(1, nobody.weapon_is)
 

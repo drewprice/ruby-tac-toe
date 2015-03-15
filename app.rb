@@ -13,9 +13,8 @@ class Player
 	end
 
 	def index
-		puts "Player #{@id}:"
 		puts "  Your name is #{@name}."
-		puts "  Your weapon is a \"#{@weapon}\"."
+		puts "  Your weapon is \"#{@weapon}\"."
 		line_break
 	end
 
@@ -90,7 +89,7 @@ def number_of_players
 
 	if response == 1
 		line_break
-		puts "Robo battle is on."
+		puts "Awesome!"
 		1
 	elsif response == 2
 		line_break
@@ -104,20 +103,29 @@ def number_of_players
 end
 
 def play_again?
-	puts "This has been a treat."
 	puts "--Would you like to play again?"
 	response = gets.chomp.downcase
 
 	if response.include? "y"
 		line_break
-		puts "Awesome! Here we go."
 		true
 	else
 		false
 	end
 end
 
-# •••• Grid related methods ••••
+def claim_right?
+	response = gets.chomp.downcase
+
+	if response.include? "y"
+		line_break
+		true
+	else
+		false
+	end
+end
+
+# •••• Grid methods ••••
 
 def create_grid
 	# Generates initial grid as an array with Squares
@@ -228,52 +236,63 @@ end
 
 def create_robot(player_1)
 	player_1_name = player_1.instance_variable_get(:@name)
-	player_1_weapon = player_1.instance_variable_get(:weapon)
+	player_1_weapon = player_1.instance_variable_get(:@weapon)
 
-	rude? = [true, false].sample
+	robot = [["Turingborg", "A"], ["Lovelacetron", "A"], ["Hopperborg", "G"], ["Matzdroid", "Y"], ["#{player_1_name}tron", "ø"]].sample
 
-	if rude?
-		robot_name = "#{player_1_name}tron"
-	else
-		robot_name = ["Turingborg", "Lovelacetron", "Hopperborg", "Matzdroid"].sample
-	end
-
-	robot_weapon = robot_chose_weapon(player_1_weapon)
+	robot_name = robot[0]
+	robot_weapon = robot[1]
+	# Make sure weapons are duplicate
+	robot_weapon = verify_weapon(robot_weapon, player_1_weapon)
 
 	Player.new(0, robot_name, robot_weapon)
-
 end
 
-def robot_chose_weapon(player_1_weapon)
-
-	robot_weapon = ["§", "∫", "¶", "X", "∑", "≠", "π", "ø", "¥", "ƒ", "ƒ", "µ", "≈", "Ω", "Á"].sample
+def verify_weapon(robot_weapon, player_1_weapon)
 	if robot_weapon == player_1_weapon
-		robot_weapon(player_1_weapon)
+		robot_weapon = ["∫", "∑", "π", "ƒ", "µ", "Ω"].sample
+		verify_weapon(robot_weapon, player_1_weapon)
 	else
 		robot_weapon
 	end
 end
 
-def robot_choice
-	rand(8)
+def robot_choice(array)
+	choice = rand(9)
+	if invalid_choice?(choice, array)
+		robot_choice(array)
+	else
+		choice
+	end
 end
 
 # •••• Turn methods ••••
 
 def take_turn(player, array)
-	player_weapon = player.instance_variable_get(:@weapon)
+	player_id = player.instance_variable_get(:@id)
 	player_name = player.instance_variable_get(:@name)
+	player_weapon = player.instance_variable_get(:@weapon)
 	
-	puts "It's your turn, #{player_name}."
 	
 	# Find particular instance of square based on player's choice
-	choice = array[get_choice(array).to_i] # As psuedo code, choice = Square found by instance variable @id
+	if player_id == 0
+		choice = array[robot_choice(array)]
+		puts "#{player_name}'s turn..."
+	else
+		puts "It's your turn, #{player_name}."
+		choice = array[get_choice(array).to_i] # As psuedo code, choice = Square found by instance variable @id
+	end
 	
 	# Updates square's instance variables
 	choice.instance_variable_set(:@contents, player_weapon)
 	choice.instance_variable_set(:@occupied, true)
 
 	view_grid(array)
+
+	if player_id == 0
+		puts "#{player_name} chose square #{choice.instance_variable_get(:@id)}."
+		line_break
+	end
 end
 
 def get_choice(array)
@@ -290,8 +309,12 @@ def get_choice(array)
 end
 
 def invalid_choice?(choice, array)
+	# The following condition handles Fixnum choices from the robot
+	if choice.class == Fixnum
+		choice = choice.to_s
+	end
+
 	# Various invalid choices: must be numeric between 0-8, and square cannot be occupied
-	# Array has been passed throughout these methods in order to check this condition
 	if (choice.is_i? && choice.to_i > -1 && choice.to_i < 9) && !(array[choice.to_i].instance_variable_get(:@occupied))
 		false
 	else
@@ -339,16 +362,16 @@ def draw?(array)
 	draw
 end
 
-# •••• The game, itself ••••
+# •••• The game itself ••••
 
 def play_game(player)
 	game_over = false
 
 	# Select game mode
 	line_break
-	puts "Will you be playing with a friend (2 players), or against the computer (1 player)?"
-	puts "--Enter 2 if you've got a friend."
-	puts "--Enter 1 if the computer is your friend."
+	puts "Will you be playing with a friend or a robot?"
+	puts "--Enter 1 if you need a robot to be your friend. (One-player game)"
+	puts "--Enter 2 if you already have a friend. (Two-player game)"
 	type_of_game = number_of_players
 
 
@@ -356,6 +379,7 @@ def play_game(player)
 		# One-player biz goes here
 		player_1 = player
 		player_2 = create_robot(player)
+		line_break
 	elsif type_of_game == 2
 		# Two-Player game
 		player_1 = player
@@ -367,50 +391,76 @@ def play_game(player)
 		end
 	end
 
-		# Display player profiles
-		player_1.index
-		player_2.index
+	# Display player profiles
+	puts "Player 1:"
+	player_1.index
 
-		# Build tic-tac-toe board
-		board = create_grid
-		first_grid(board)
+	if player_2.instance_variable_get(:@id) == 0
+		puts "Robot:"
+	else
+		puts "Player 2:"
+	end
+	
+	player_2.index
 
-		# Take turns
-		turn_counter = 0
-		while !game_over do
-			# Determine whose turn it is
-			if turn_counter.even?
-				player = player_1
-			else
-				player = player_2
-			end
+	# Build tic-tac-toe board
+	board = create_grid
+	first_grid(board)
 
-			take_turn(player, board)
-			
-			if winner?(board)
-				puts "...!!!"
-				line_break
-				puts "Congratulations, #{player.instance_variable_get(:@name)}! Your ferocious swinging of the \"#{player.instance_variable_get(:@weapon)}\" has lead you to victory."
-				puts "--Well done. Press enter to continue."
-				gets
-				game_over = true
-			elsif draw?(board)
-				puts "Well. It's a draw..."
-				puts "Good game, though."
-				line_break
-				game_over = true
-			else
-				turn_counter += 1
-			end
-		end
-
-		if play_again?
-			play_game(player_1)
+	# Take turns
+	turn_counter = 0
+	while !game_over do
+		# Determine whose turn it is
+		if turn_counter.even?
+			player = player_1
 		else
-			puts "Ok. Thanks for playing!"
-			que_music(true)
+			player = player_2
 		end
-	end	
+
+		take_turn(player, board)
+		
+		if winner?(board)
+			puts "...!!!"
+			line_break
+			puts "Congratulations, #{player.instance_variable_get(:@name)}! Your ferocious swinging of the \"#{player.instance_variable_get(:@weapon)}\" has lead you to victory."
+			puts "--Well done. Press enter to continue."
+			gets
+			# If player 2 won, offer Player 1 position
+			if player == player_2 && player_2.instance_variable_get(:@id) != 0
+				puts "#{player.instance_variable_get(:@name)}, you have earned the right to claim the Player 1 position."
+				puts "--Will you take it?"
+
+				if claim_right?
+					player_1 = player_2
+					puts "#{player.instance_variable_get(:@name)} is now Player One!"
+					line_break
+				else
+					line_break
+					puts "Ok. By your grace, #{player_1.instance_variable_get(:@name)} will remain Player 1."
+					line_break
+				end
+			end
+			game_over = true
+		elsif draw?(board)
+			puts "Well. It's a draw..."
+			puts "Good game, though."
+			line_break
+			game_over = true
+		else
+			turn_counter += 1
+		end
+	end
+
+	if play_again?
+		line_break
+		puts "Awesome! Here we go #{player_1.instance_variable_get(:@name)}."
+		play_game(player_1)
+	else
+		line_break
+		puts "Ok. Thanks for playing!"
+		que_music(true)
+	end
+		
 end
 
 # --------------------------------- STORY STARTS HERE ---------------------------------

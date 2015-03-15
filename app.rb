@@ -53,8 +53,21 @@ class Square
 
 end
 # --------------------------------- METHODS ---------------------------------
+
+# •••• Misc methods ••••
+
 def line_break
 	puts ""
+end
+
+def que_music(game_over=false)
+	line_break
+	if game_over
+		puts "[**Awesome theme music fades**]"
+	else
+		puts "[**Awesome theme music**]"
+	end
+	line_break
 end
 
 def ready_to_rock?
@@ -77,10 +90,8 @@ def number_of_players
 
 	if response == 1
 		line_break
-		puts "Working on this..."
-		puts "Not ready yet..."
-		puts "--So... 2 players or, 2 players?"
-		number_of_players
+		puts "Robo battle is on."
+		1
 	elsif response == 2
 		line_break
 		puts "Perfect!"
@@ -91,6 +102,22 @@ def number_of_players
 		number_of_players
 	end
 end
+
+def play_again?
+	puts "This has been a treat."
+	puts "--Would you like to play again?"
+	response = gets.chomp.downcase
+
+	if response.include? "y"
+		line_break
+		puts "Awesome! Here we go."
+		true
+	else
+		false
+	end
+end
+
+# •••• Grid related methods ••••
 
 def create_grid
 	# Generates initial grid as an array with Squares
@@ -113,7 +140,7 @@ def view_grid(arr)
 
 		# Create rows where appropriate
 		if current_id == 0 || current_id == 3 || current_id == 6
-			# Square@id == arr.index
+			# Square.id == arr.index
 			i_plus_1 = arr[ current_id + 1 ]
 			i_plus_2 = arr[ current_id + 2 ]
 			
@@ -131,28 +158,15 @@ def first_grid(arr)
 	view_grid(arr)
 	puts "...great job."
 	line_break
-	puts "So when it's your turn, just select the number corresponding to the square you want to slay. I mean claim."
+	puts "So, when it's your turn, just select the number corresponding to the square you want to slay. I mean claim."
 	puts "--Got it? Hit enter when you're ready."
 	gets
 end
 
-def play_again?
-	puts "This has been a treat."
-	puts "Would you like to play again?"
-	response = gets.chomp.downcase
+# •••• Create player methods ••••
 
-	if response.include? "y"
-		line_break
-		puts "Awesome! Here we go."
-		true
-	else
-		false
-	end
-end
-
-# •••• CREATE_PLAYER ••••
-
-def create_player(id, other_players_weapon, name="")
+def create_player(id, other_players_weapon="", name="")
+	# The following conditional is skipped for recursive cases where name has been defined but weapon has not; see the elsif below
 	if name == ""
 		name = choose_name(id)
 		line_break
@@ -161,13 +175,14 @@ def create_player(id, other_players_weapon, name="")
 	weapon = choose_weapon(name)
 	line_break
 	
-	# Prevents Player being created without weapon, due to unsupported or duplicate weapon
+	# Prevents Player being created without weapon, due to initial entry of unsupported or duplicate weapon
 	if weapon_exists?(weapon) && weapon != other_players_weapon
 		Player.new(id, name, weapon)
 	elsif weapon_exists?(weapon) && weapon == other_players_weapon
 		puts "Holdup holdup holdup. You can't have the same weapon!"
 		create_player(id, other_players_weapon, name)
 	else
+		puts "Somethine strange happened... let's try that again."
 		create_player(id, other_players_weapon, name)
 	end
 end
@@ -178,7 +193,7 @@ def choose_name(id)
 	else
 		puts "--Player #{id}, what's your name?"
 	end
-	name = gets.chomp.capitalize
+	gets.chomp.capitalize
 end
 
 def choose_weapon(name)
@@ -195,12 +210,13 @@ def choose_weapon(name)
 			puts "Nah. No numbers."
 			choose_weapon(name)
 		else
-			weapon = response
+			response
 		end
 	end
 end
 
 def weapon_exists?(weapon)
+	# This prevents empty weapon creation due to recursion
 	if weapon != ""
 		true
 	else
@@ -208,7 +224,41 @@ def weapon_exists?(weapon)
 	end
 end
 
-# •••• TAKE_TURN ••••
+# •••• Robot methods ••••
+
+def create_robot(player_1)
+	player_1_name = player_1.instance_variable_get(:@name)
+	player_1_weapon = player_1.instance_variable_get(:weapon)
+
+	rude? = [true, false].sample
+
+	if rude?
+		robot_name = "#{player_1_name}tron"
+	else
+		robot_name = ["Turingborg", "Lovelacetron", "Hopperborg", "Matzdroid"].sample
+	end
+
+	robot_weapon = robot_chose_weapon(player_1_weapon)
+
+	Player.new(0, robot_name, robot_weapon)
+
+end
+
+def robot_chose_weapon(player_1_weapon)
+
+	robot_weapon = ["§", "∫", "¶", "X", "∑", "≠", "π", "ø", "¥", "ƒ", "ƒ", "µ", "≈", "Ω", "Á"].sample
+	if robot_weapon == player_1_weapon
+		robot_weapon(player_1_weapon)
+	else
+		robot_weapon
+	end
+end
+
+def robot_choice
+	rand(8)
+end
+
+# •••• Turn methods ••••
 
 def take_turn(player, array)
 	player_weapon = player.instance_variable_get(:@weapon)
@@ -217,10 +267,9 @@ def take_turn(player, array)
 	puts "It's your turn, #{player_name}."
 	
 	# Find particular instance of square based on player's choice
-	# As psuedo code, choice = Square.find_by_instance_variable(:@id)
-	choice = array[get_choice(array).to_i]
+	choice = array[get_choice(array).to_i] # As psuedo code, choice = Square found by instance variable @id
 	
-	# Set square's new instance variables
+	# Updates square's instance variables
 	choice.instance_variable_set(:@contents, player_weapon)
 	choice.instance_variable_set(:@occupied, true)
 
@@ -290,21 +339,23 @@ def draw?(array)
 	draw
 end
 
-# •••• PLAY_GAME ••••
+# •••• The game, itself ••••
 
 def play_game(player)
 	game_over = false
-	line_break
 
 	# Select game mode
-	puts "Will you be playing with a friend, or against the computer?"
+	line_break
+	puts "Will you be playing with a friend (2 players), or against the computer (1 player)?"
 	puts "--Enter 2 if you've got a friend."
 	puts "--Enter 1 if the computer is your friend."
-	type_of_game = number_of_players.to_i
+	type_of_game = number_of_players
 
 
 	if type_of_game == 1
 		# One-player biz goes here
+		player_1 = player
+		player_2 = create_robot(player)
 	elsif type_of_game == 2
 		# Two-Player game
 		player_1 = player
@@ -314,6 +365,7 @@ def play_game(player)
 		if player_1.name_is == player_2.name_is
 			player_2.instance_variable_set(:@name, "#{player_2.name_is} II")
 		end
+	end
 
 		# Display player profiles
 		player_1.index
@@ -324,8 +376,7 @@ def play_game(player)
 		first_grid(board)
 
 		# Take turns
-		turn_counter = 0  # Controls while loop
-		
+		turn_counter = 0
 		while !game_over do
 			# Determine whose turn it is
 			if turn_counter.even?
@@ -354,30 +405,21 @@ def play_game(player)
 		end
 
 		if play_again?
-			line_break
-			puts "[**Ultra rad theme music**]"
-			line_break
 			play_game(player_1)
 		else
 			puts "Ok. Thanks for playing!"
-			line_break
-			puts "[**Awesome theme music fades**]"
-			line_break
+			que_music(true)
 		end
 	end	
 end
 
 # --------------------------------- STORY STARTS HERE ---------------------------------
-line_break
-puts "[**Awesome theme music**]"
-line_break
+que_music
 
 puts "Hi! Welcome to tic-tac-toe."
 
 # Create first player
-# "nobody" aids in preventing duplicate weapons; see player_1 assignment; essentially, create_player must always carry another Player's weapon
-nobody = Player.new(0, "", "")
-player_1 = create_player(1, nobody.weapon_is)
+player_1 = create_player(1)
 
 puts "Sweet."
 ready_to_rock?

@@ -6,7 +6,7 @@ class String
 end
 
 class Player
-	def initialize (id, name, weapon)
+	def initialize (id, name, weapon, robot=false)
 		@id = id
 		@name = name
 		@weapon = weapon
@@ -174,9 +174,9 @@ end
 
 # •••• Create player methods ••••
 
-def create_player(id, other_players_weapon="", name="")
+def create_player(id, other_players_weapon=nil, name=nil)
 	# The following conditional is skipped for recursive cases where name has been defined but weapon has not; see the elsif below
-	if name == ""
+	if name.nil?
 		name = choose_name(id)
 		line_break
 	end
@@ -185,9 +185,9 @@ def create_player(id, other_players_weapon="", name="")
 	line_break
 	
 	# Prevents Player being created without weapon, due to initial entry of unsupported or duplicate weapon
-	if weapon_exists?(weapon) && weapon != other_players_weapon
+	if weapon != other_players_weapon
 		Player.new(id, name, weapon)
-	elsif weapon_exists?(weapon) && weapon == other_players_weapon
+	elsif weapon == other_players_weapon
 		puts "Holdup holdup holdup. You can't have the same weapon!"
 		create_player(id, other_players_weapon, name)
 	else
@@ -221,15 +221,6 @@ def choose_weapon(name)
 		else
 			response
 		end
-	end
-end
-
-def weapon_exists?(weapon)
-	# This prevents empty weapon creation due to recursion
-	if weapon != ""
-		true
-	else
-		false
 	end
 end
 
@@ -459,7 +450,7 @@ def play_game(player)
 	else
 		line_break
 		puts "Ok. Thanks for playing!"
-		cue_music(true)
+		cue_music(true) #game_over = true
 	end
 		
 end

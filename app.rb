@@ -6,10 +6,12 @@ class String
 end
 
 class Player
-	def initialize (id, name, weapon, robot=false)
-		@id = id
+	attr_accessor :name, :weapon, :robot
+
+	def initialize (name, weapon, robot=false)
 		@name = name
 		@weapon = weapon
+		@robot = robot
 	end
 
 	def index
@@ -17,37 +19,15 @@ class Player
 		puts "  Your weapon is \"#{@weapon}\"."
 		line_break
 	end
-
-	def id_is
-		@id
-	end
-
-	def name_is
-		@name
-	end
-
-	def weapon_is
-		@weapon
-	end
 end
 
 class Square
+	attr_accessor :id, :contents, :occupied
+
 	def initialize(id)
 		@id = id
 		@contents = id
 		@occupied = false
-	end
-
-	def id_is
-		@id
-	end
-
-	def contents_are
-		@contents
-	end
-
-	def occupied?
-		@occupied
 	end
 end
 # --------------------------------- METHODS ---------------------------------
@@ -120,35 +100,41 @@ def play_again?
 	end
 end
 
-# •••• Grid methods ••••
-
-def create_grid
-	# Generates initial grid as an array with Squares
-
-	grid_array = []
-	9.times do |id|
-		new_square = Square.new(id)
-		grid_array << new_square
+def visible_response?(string)
+	if string.nil? || string.empty?
+		false
+	else
+		true
 	end
-	grid_array
 end
 
-def view_grid(arr)
-	# Displays dynamic grid
+# •••• Grid methods ••••
+
+def create_game_board
+	# Generates initial grid as an array with Squares (class) that display their 
+	board_array = []
+	9.times do |i|
+		new_square = Square.new(i)
+		board_array << new_square
+	end
+	board_array
+end
+
+def view_game_board(arr)
+	# Displays dynamic board via an array
 	
 	line_break
 	puts "    ---------"
 
-	arr.each do |i|
-		current_square_index = i.instance_variable_get(:@id)
+	arr.each do |square|
+		current_index = square.id
 
 		# Create rows where appropriate
-		if current_square_index == 0 || current_square_index == 3 || current_square_index == 6
-			# Square.id == arr.index
-			i_plus_1 = arr[ current_square_index + 1 ]
-			i_plus_2 = arr[ current_square_index + 2 ]
+		if current_index == 0 || current_index == 3 || current_index == 6
+			square_at_index_plus_1 = arr[ current_index + 1 ]
+			square_at_index_plus_2 = arr[ current_index + 2 ]
 			
-			puts "    [#{i.instance_variable_get(:@contents)}][#{i_plus_1.instance_variable_get(:@contents)}][#{i_plus_2.instance_variable_get(:@contents)}]"
+			puts "    [#{square.contents}][#{square_at_index_plus_1.contents}][#{square_at_index_plus_2.contents}]"
 		end
 	end
 	
@@ -156,26 +142,32 @@ def view_grid(arr)
 	line_break
 end
 
-def first_grid(arr)
-	puts "Now, imagine a tic-tac-toe board..."
+def first_view(arr)
+	puts "Now, imagine a tic-tac-toe game board..."
 	puts "--Hit enter when you think you've got a good one."
 	gets
-	view_grid(arr)
+
+	
+	view_game_board(arr)
+	
 	puts "...great job."
 	line_break
+	
 	puts "So, when it's your turn, just select the number corresponding to the square you want to slay. I mean claim."
 	puts "--Got it? Hit enter when you're ready."
 	gets
 end
 
+
 # •••• Create player methods ••••
 
-def create_player(id, other_player_weapon=nil, name=nil)
+def create_player(name=nil, other_player_weapon=nil)
 	# The following conditional is skipped for recursive cases where name has been defined but weapon has not; see the elsif below
 	if name.nil?
-		name = choose_name(id)
-		line_break
+		puts "--Player 2, what's your name?"
+		name = choose_name
 	end
+	line_break
 
 	weapon = choose_weapon(name)
 	line_break
@@ -184,49 +176,48 @@ def create_player(id, other_player_weapon=nil, name=nil)
 		puts "Holdup holdup holdup. You can't have the same weapon!"
 		create_player(id, other_player_weapon, name)
 	else
-		Player.new(id, name, weapon)
+		Player.new(name, weapon)
 	end
 end
 
-def choose_name(player_id)
-	if player_id == 1
-		puts "--What's your name?"
+def choose_name
+	name = gets.chomp.strip.capitalize
+	if !(visible_response?(name))
+		puts "Sorry, invisible names don't fly 'round here."
+		puts "--Try agin. What's your name?"
+		choose_name
 	else
-		puts "--Player #{player_id}, what's your name?"
+		name
 	end
-	gets.chomp.strip.capitalize
 end
 
 def choose_weapon(player_name)
 	puts "--Alright #{player_name}, choose your weapon. Any non-numeric character will do."
-	response = gets.chomp.strip.slice(0)
+	weapon = gets.chomp.strip.slice(0)
 
-	if response.nil?
-		puts "Sorry, invisible weapons don't count."
+	if !(visible_response?(weapon))
+		puts "Sorry, no invisible weapons."
 		choose_weapon(player_name)
-	elsif response.is_i?
+	elsif weapon.is_i?
 		line_break
 		puts "Nah. No numbers."
 		choose_weapon(player_name)
 	else
-		response
+		weapon
 	end
 end
 
 # •••• Robot methods ••••
 
 def create_robot(player_1)
-	player_1_name = player_1.instance_variable_get(:@name)
-	player_1_weapon = player_1.instance_variable_get(:@weapon)
-
-	robot = [["Turingborg", "A"], ["Lovelacetron", "A"], ["Hopperborg", "G"], ["Matzdroid", "Y"], ["#{player_1_name}tron", "ø"]].sample
+	robot = [["Turingborg", "A"], ["Lovelacetron", "A"], ["Hopperborg", "G"], ["Matzdroid", "Y"], ["#{player_1.name}tron", "X"]].sample
 
 	robot_name = robot[0]
 	robot_weapon = robot[1]
-	# Make sure weapons are duplicate
-	robot_weapon = verify_weapon(robot_weapon, player_1_weapon)
+	# Make sure weapons aren't duplicate
+	robot_weapon = verify_weapon(robot_weapon, player_1.weapon)
 
-	Player.new(0, robot_name, robot_weapon)
+	Player.new(robot_name, robot_weapon, robot=true)
 end
 
 def verify_weapon(robot_weapon, player_1_weapon)
@@ -238,93 +229,81 @@ def verify_weapon(robot_weapon, player_1_weapon)
 	end
 end
 
-def robot_choice(array)
+def robot_choice(game_board)
 	choice = rand(9)
-	if invalid_choice?(choice, array)
-		robot_choice(array)
-	else
+	if valid_choice?(choice, game_board)
 		choice
+	else
+		robot_choice(game_board)
 	end
 end
 
 # •••• Turn methods ••••
 
-def take_turn(player, array)
-	player_id = player.instance_variable_get(:@id)
-	player_name = player.instance_variable_get(:@name)
-	player_weapon = player.instance_variable_get(:@weapon)
-	
-	
-	# Find particular instance of square based on player's choice
-	if player_id == 0
-		choice = array[robot_choice(array)]
-		puts "#{player_name}'s turn..."
+def take_turn(player, game_board)
+	if player.robot
+		puts "Robot's turn..."
+		chosen_square = game_board[robot_choice(game_board)]
+		puts "#{player.name} chose square #{chosen_square.id}."
 	else
-		puts "It's your turn, #{player_name}."
-		choice = array[get_choice(array).to_i] # As psuedo code, choice = Square found by instance variable @id
+		puts "It's your turn, #{player.name}."
+		chosen_square = game_board[get_choice(game_board)]
 	end
 	
 	# Updates square's instance variables
-	choice.instance_variable_set(:@contents, player_weapon)
-	choice.instance_variable_set(:@occupied, true)
+	chosen_square.contents = player.weapon
+	chosen_square.occupied = true
 
-	view_grid(array)
-
-	if player_id == 0
-		puts "#{player_name} chose square #{choice.instance_variable_get(:@id)}."
-		line_break
-	end
+	view_game_board(game_board)
 end
 
-def get_choice(array)
+def get_choice(game_board)
 	puts "--Which square do you choose?"
-	choice = gets.chomp
+	choice = gets.chomp.strip
 
-	if invalid_choice?(choice, array)
+	if !(choice.is_i?) || !(valid_choice?(choice, game_board))
 		line_break
 		puts "Sorry, that choice is invalid. Try again!"
-		get_choice(array)
+		get_choice(game_board)
 	else
-		choice
+		choice.to_i
 	end
 end
 
-def invalid_choice?(choice, array)
+def valid_choice?(choice, game_board)
 	# The following condition handles Fixnum choices from the robot
-	if choice.class == Fixnum
-		choice = choice.to_s
+	if choice.class == String
+		choice = choice.to_i
 	end
-
 	# Various invalid choices: must be numeric between 0-8, and square cannot be occupied
-	if (choice.is_i? && choice.to_i > -1 && choice.to_i < 9) && !(array[choice.to_i].instance_variable_get(:@occupied))
-		false
-	else
+	if (choice >= 0 && choice <= 8) && !(game_board[choice].occupied)
 		true
+	else
+		false
 	end
 end
 
 def winner?(array)
 	# Assign each Square.contents to a variable
-	zero = array[0].instance_variable_get(:@contents)
-	one = array[1].instance_variable_get(:@contents)
-	two = array[2].instance_variable_get(:@contents)
-	three = array[3].instance_variable_get(:@contents)
-	four = array[4].instance_variable_get(:@contents)
-	five = array[5].instance_variable_get(:@contents)
-	six = array[6].instance_variable_get(:@contents)
-	seven = array[7].instance_variable_get(:@contents)
-	eight = array[8].instance_variable_get(:@contents)
+	zero = array[0].contents
+	one = array[1].contents
+	two = array[2].contents
+	three = array[3].contents
+	four = array[4].contents
+	five = array[5].contents
+	six = array[6].contents
+	seven = array[7].contents
+	eight = array[8].contents
 
 	# All possible winning combinations
-	if  ( zero == one && zero == two 	) 	||
-		( zero == four && zero == eight ) 	||
-		( zero == three && zero == six 	)	||
-		( one == four && one == seven 	)	||
-		( two == four && two == six 	)	||
-		( two == five && two == eight 	)	||
-		( three == four && three == five)	||
+	if  ( zero == one && zero == two 	)||
+		( zero == four && zero == eight	)||
+		( zero == three && zero == six 	)||
+		( one == four && one == seven 	)||
+		( two == four && two == six 	)||
+		( two == five && two == eight	)||
+		( three == four && three == five)||
 		( six == seven && six == eight 	)
-		
 		true
 	else
 		false
@@ -333,10 +312,10 @@ def winner?(array)
 end
 
 def draw?(array)
-	# It's a draw unless any square is NOT occupied
+	# Unless a square is unoccupied, it's a draw
 	draw = true
 	array.each do |square|
-		if !(square.instance_variable_get(:@occupied))
+		if !(square.occupied)
 			draw = false
 		end
 	end
@@ -357,18 +336,17 @@ def play_game(player)
 
 
 	if type_of_game == 1
-		# One-player biz goes here
 		player_1 = player
-		player_2 = create_robot(player)
+		player_2 = create_robot(player_1)
 		line_break
 	elsif type_of_game == 2
 		# Two-Player game
 		player_1 = player
-		player_2 = create_player(2, player_1.weapon_is)
+		player_2 = create_player(nil, player_1.weapon)
 
 		# Take care of players with the same name
-		if player_1.name_is == player_2.name_is
-			player_2.instance_variable_set(:@name, "#{player_2.name_is} II")
+		if player_1.name == player_2.name
+			player_2.name = "#{player_2.name} II"
 		end
 	end
 
@@ -376,17 +354,16 @@ def play_game(player)
 	puts "Player 1:"
 	player_1.index
 
-	if player_2.instance_variable_get(:@id) == 0
+	if player_2.robot
 		puts "Robot:"
 	else
 		puts "Player 2:"
 	end
-
 	player_2.index
 
-	# Build tic-tac-toe board
-	board = create_grid
-	first_grid(board)
+	# Build tic-tac-toe game_board
+	game_board = create_game_board
+	first_view(game_board)
 
 	# Take turns
 	turn_counter = 0
@@ -398,32 +375,37 @@ def play_game(player)
 			player = player_2
 		end
 
-		take_turn(player, board)
+		take_turn(player, game_board)
 		
-		if winner?(board)
+		if winner?(game_board)
+
 			puts "...!!!"
 			line_break
-			puts "Congratulations, #{player.instance_variable_get(:@name)}! Your ferocious use of the \"#{player.instance_variable_get(:@weapon)}\" has lead you to victory."
+			
+			puts "Congratulations, #{player.name}! Your ferocious use of the \"#{player.weapon}\" has lead you to victory."
 			puts "--Well done. Press enter to continue."
 			gets
-			# If player 2 won, offer Player 1 position
-			if player == player_2 && player_2.instance_variable_get(:@id) != 0
-				puts "#{player.instance_variable_get(:@name)}, you have earned the right to claim the Player 1 position."
+			
+			# If player 2 won, offer position of Player 1
+			if player == player_2 && !(player_2.robot)
+				puts "#{player.name}, you have earned the right to claim the Player 1 position."
 				puts "--Will you take it?"
 
 				if get_a_yes?
 					player_1 = player_2
 					line_break
-					puts "#{player.instance_variable_get(:@name)} is now Player One!"
+					puts "#{player.name} is now Player One!"
 					line_break
 				else
 					line_break
-					puts "Ok. By your grace, #{player_1.instance_variable_get(:@name)} will remain Player 1."
+					puts "Ok. By your grace, #{player_1.name} will remain Player 1."
 					line_break
 				end
 			end
+
 			game_over = true
-		elsif draw?(board)
+
+		elsif draw?(game_board)
 			puts "Well... it's a draw."
 			puts "Good game, though."
 			line_break
@@ -435,7 +417,7 @@ def play_game(player)
 
 	if play_again?
 		line_break
-		puts "Awesome! Here we go #{player_1.instance_variable_get(:@name)}."
+		puts "Awesome! Here we go #{player_1.name}."
 		play_game(player_1)
 	else
 		line_break
@@ -451,7 +433,8 @@ cue_music
 puts "Hi! Welcome to tic-tac-toe."
 
 # Create first player
-player_1 = create_player(1)
+puts "--What is your name?"
+player_1 = create_player(choose_name)
 
 puts "Sweet."
 ready_to_rock

@@ -58,9 +58,9 @@ def line_break
 	puts ""
 end
 
-def cue_music(game_over=false)
+def cue_music(cue="start")
 	line_break
-	if game_over
+	if cue == "stop"
 		puts "[**Awesome theme music fades**]"
 	else
 		puts "[**Awesome theme music**]"
@@ -68,18 +68,26 @@ def cue_music(game_over=false)
 	line_break
 end
 
-def ready_to_rock?
-	puts "--Are you ready to rock?!"
+def get_a_yes?
 	response = gets.chomp.downcase
 
 	if response.include? "y"
+		true	
+	else
+		false
+	end
+end
+
+def ready_to_rock
+	puts "--Are you ready to rock?!"
+	
+	if get_a_yes?
 		line_break
 		puts "Alrightletsdoit!"
-		true
 	else
 		line_break
 		puts "I'mma ask you again."
-		ready_to_rock?
+		ready_to_rock
 	end
 end
 
@@ -103,20 +111,8 @@ end
 
 def play_again?
 	puts "--Would you like to play again?"
-	response = gets.chomp.downcase
 
-	if response.include? "y"
-		line_break
-		true
-	else
-		false
-	end
-end
-
-def claim_right?
-	response = gets.chomp.downcase
-
-	if response.include? "y"
+	if get_a_yes?
 		line_break
 		true
 	else
@@ -174,7 +170,7 @@ end
 
 # •••• Create player methods ••••
 
-def create_player(id, other_players_weapon=nil, name=nil)
+def create_player(id, other_player_weapon=nil, name=nil)
 	# The following conditional is skipped for recursive cases where name has been defined but weapon has not; see the elsif below
 	if name.nil?
 		name = choose_name(id)
@@ -184,34 +180,34 @@ def create_player(id, other_players_weapon=nil, name=nil)
 	weapon = choose_weapon(name)
 	line_break
 	
-	if weapon == other_players_weapon
+	if weapon == other_player_weapon
 		puts "Holdup holdup holdup. You can't have the same weapon!"
-		create_player(id, other_players_weapon, name)
+		create_player(id, other_player_weapon, name)
 	else
 		Player.new(id, name, weapon)
 	end
 end
 
-def choose_name(id)
-	if id == 1
+def choose_name(player_id)
+	if player_id == 1
 		puts "--What's your name?"
 	else
-		puts "--Player #{id}, what's your name?"
+		puts "--Player #{player_id}, what's your name?"
 	end
-	gets.chomp.capitalize
+	gets.chomp.strip.capitalize
 end
 
-def choose_weapon(name)
-	puts "--Alright #{name}, choose your weapon. Any non-numeric character will do."
+def choose_weapon(player_name)
+	puts "--Alright #{player_name}, choose your weapon. Any non-numeric character will do."
 	response = gets.chomp.strip.slice(0)
 
 	if response.nil?
 		puts "Sorry, invisible weapons don't count."
-		choose_weapon(name)
+		choose_weapon(player_name)
 	elsif response.is_i?
 		line_break
 		puts "Nah. No numbers."
-		choose_weapon(name)
+		choose_weapon(player_name)
 	else
 		response
 	end
@@ -415,8 +411,9 @@ def play_game(player)
 				puts "#{player.instance_variable_get(:@name)}, you have earned the right to claim the Player 1 position."
 				puts "--Will you take it?"
 
-				if claim_right?
+				if get_a_yes?
 					player_1 = player_2
+					line_break
 					puts "#{player.instance_variable_get(:@name)} is now Player One!"
 					line_break
 				else
@@ -443,7 +440,7 @@ def play_game(player)
 	else
 		line_break
 		puts "Ok. Thanks for playing!"
-		cue_music(true) #game_over = true
+		cue_music("stop")
 	end
 		
 end
@@ -457,6 +454,6 @@ puts "Hi! Welcome to tic-tac-toe."
 player_1 = create_player(1)
 
 puts "Sweet."
-ready_to_rock?
+ready_to_rock
 
 play_game(player_1)

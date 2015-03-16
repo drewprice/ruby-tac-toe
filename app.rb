@@ -184,12 +184,11 @@ def create_player(id, other_players_weapon=nil, name=nil)
 	weapon = choose_weapon(name)
 	line_break
 	
-	# Prevents Player being created without weapon, due to initial entry of unsupported or duplicate weapon
-	if weapon != other_players_weapon
-		Player.new(id, name, weapon)
-	elsif weapon == other_players_weapon
+	if weapon == other_players_weapon
 		puts "Holdup holdup holdup. You can't have the same weapon!"
 		create_player(id, other_players_weapon, name)
+	else
+		Player.new(id, name, weapon)
 	end
 end
 

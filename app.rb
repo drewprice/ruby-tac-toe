@@ -49,12 +49,17 @@ def cue_music(cue="start")
 end
 
 def get_a_yes?
-	response = gets.chomp.downcase
+	response = gets.chomp.strip.downcase
 
 	if response.include? "y"
 		true	
-	else
+	elsif response.include? "n"
 		false
+	else
+		line_break
+		puts "Sorry..."
+		puts "--Yes or no?"
+		get_a_yes?
 	end
 end
 
@@ -141,13 +146,13 @@ def view_game_board(arr)
 	line_break
 end
 
-def first_view(arr)
+def first_view(game_board)
 	puts "Now, imagine a tic-tac-toe game board..."
 	puts "--Hit enter when you think you've got a good one."
 	gets
 
 	
-	view_game_board(arr)
+	view_game_board(game_board)
 	
 	puts "...great job."
 	line_break
@@ -243,7 +248,6 @@ def take_turn(player, game_board)
 	if player.robot
 		puts "Robot's turn..."
 		chosen_square = game_board[robot_choice(game_board)]
-		puts "#{player.name} chose square #{chosen_square.id}."
 	else
 		puts "It's your turn, #{player.name}."
 		chosen_square = game_board[get_choice(game_board)]
@@ -254,6 +258,7 @@ def take_turn(player, game_board)
 	chosen_square.occupied = true
 
 	view_game_board(game_board)
+	puts "#{player.name} chose square #{chosen_square.id}."
 end
 
 def get_choice(game_board)

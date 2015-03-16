@@ -72,7 +72,7 @@ def ready_to_rock
 end
 
 def number_of_players
-	response = gets.chomp.to_i
+	response = gets.chomp.strip.to_i
 
 	if response == 1
 		line_break
@@ -111,25 +111,24 @@ end
 # •••• Grid methods ••••
 
 def create_game_board
-	# Generates initial grid as an array with Squares (class) that display their 
+	# Generates initial board as an array of Squares, where square.id == array.index[square]
 	board_array = []
-	9.times do |i|
-		new_square = Square.new(i)
+	9.times do |id|
+		new_square = Square.new(id)
 		board_array << new_square
 	end
 	board_array
 end
 
 def view_game_board(arr)
-	# Displays dynamic board via an array
-	
+	# Displays dynamic board via the array generated in create_game_board
 	line_break
 	puts "    ---------"
 
 	arr.each do |square|
 		current_index = square.id
 
-		# Create rows where appropriate
+		# Display rows appropriately
 		if current_index == 0 || current_index == 3 || current_index == 6
 			square_at_index_plus_1 = arr[ current_index + 1 ]
 			square_at_index_plus_2 = arr[ current_index + 2 ]
@@ -162,19 +161,18 @@ end
 # •••• Create player methods ••••
 
 def create_player(name=nil, other_player_weapon=nil)
-	# The following conditional is skipped for recursive cases where name has been defined but weapon has not; see the elsif below
+
 	if name.nil?
 		puts "--Player 2, what's your name?"
 		name = choose_name
 	end
-	line_break
 
 	weapon = choose_weapon(name)
 	line_break
 	
 	if weapon == other_player_weapon
 		puts "Holdup holdup holdup. You can't have the same weapon!"
-		create_player(id, other_player_weapon, name)
+		create_player(name, other_player_weapon)
 	else
 		Player.new(name, weapon)
 	end
@@ -187,6 +185,7 @@ def choose_name
 		puts "--Try agin. What's your name?"
 		choose_name
 	else
+		line_break
 		name
 	end
 end
@@ -271,7 +270,6 @@ def get_choice(game_board)
 end
 
 def valid_choice?(choice, game_board)
-	# The following condition handles Fixnum choices from the robot
 	if choice.class == String
 		choice = choice.to_i
 	end
@@ -283,17 +281,17 @@ def valid_choice?(choice, game_board)
 	end
 end
 
-def winner?(array)
+def winner?(game_board)
 	# Assign each Square.contents to a variable
-	zero = array[0].contents
-	one = array[1].contents
-	two = array[2].contents
-	three = array[3].contents
-	four = array[4].contents
-	five = array[5].contents
-	six = array[6].contents
-	seven = array[7].contents
-	eight = array[8].contents
+	zero = game_board[0].contents
+	one = game_board[1].contents
+	two = game_board[2].contents
+	three = game_board[3].contents
+	four = game_board[4].contents
+	five = game_board[5].contents
+	six = game_board[6].contents
+	seven = game_board[7].contents
+	eight = game_board[8].contents
 
 	# All possible winning combinations
 	if  ( zero == one && zero == two 	)||
@@ -311,10 +309,10 @@ def winner?(array)
 	
 end
 
-def draw?(array)
+def draw?(game_board)
 	# Unless a square is unoccupied, it's a draw
 	draw = true
-	array.each do |square|
+	game_board.each do |square|
 		if !(square.occupied)
 			draw = false
 		end
@@ -324,24 +322,21 @@ end
 
 # •••• The game itself ••••
 
-def play_game(player)
+def play_game(player_1)
 	game_over = false
 
-	# Select game mode
+	# --- Select game mode ---
 	line_break
 	puts "Will you be playing with a friend or a robot?"
 	puts "--Enter 1 if you need a robot to be your friend. (One-player game)"
 	puts "--Enter 2 if you already have a friend. (Two-player game)"
 	type_of_game = number_of_players
 
-
 	if type_of_game == 1
-		player_1 = player
 		player_2 = create_robot(player_1)
 		line_break
 	elsif type_of_game == 2
 		# Two-Player game
-		player_1 = player
 		player_2 = create_player(nil, player_1.weapon)
 
 		# Take care of players with the same name
@@ -350,7 +345,7 @@ def play_game(player)
 		end
 	end
 
-	# Display player profiles
+	# --- Display player profiles ---
 	puts "Player 1:"
 	player_1.index
 
@@ -361,14 +356,14 @@ def play_game(player)
 	end
 	player_2.index
 
-	# Build tic-tac-toe game_board
+	# --- Build tic-tac-toe game board ---
 	game_board = create_game_board
 	first_view(game_board)
 
-	# Take turns
+	# --- Take turns ---
 	turn_counter = 0
 	while !game_over do
-		# Determine whose turn it is
+		# -- Determine whose turn it is --
 		if turn_counter.even?
 			player = player_1
 		else
@@ -386,7 +381,7 @@ def play_game(player)
 			puts "--Well done. Press enter to continue."
 			gets
 			
-			# If player 2 won, offer position of Player 1
+			# - If player 2 won, offer position of Player 1 -
 			if player == player_2 && !(player_2.robot)
 				puts "#{player.name}, you have earned the right to claim the Player 1 position."
 				puts "--Will you take it?"
@@ -423,8 +418,7 @@ def play_game(player)
 		line_break
 		puts "Ok. Thanks for playing!"
 		cue_music("stop")
-	end
-		
+	end	
 end
 
 # --------------------------------- STORY STARTS HERE ---------------------------------

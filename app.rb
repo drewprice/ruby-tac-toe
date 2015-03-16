@@ -49,7 +49,6 @@ class Square
 	def occupied?
 		@occupied
 	end
-
 end
 # --------------------------------- METHODS ---------------------------------
 
@@ -59,7 +58,7 @@ def line_break
 	puts ""
 end
 
-def que_music(game_over=false)
+def cue_music(game_over=false)
 	line_break
 	if game_over
 		puts "[**Awesome theme music fades**]"
@@ -140,21 +139,23 @@ end
 
 def view_grid(arr)
 	# Displays dynamic grid
+	
 	line_break
 	puts "    ---------"
 
 	arr.each do |i|
-		current_id = i.instance_variable_get(:@id)
+		current_square_index = i.instance_variable_get(:@id)
 
 		# Create rows where appropriate
-		if current_id == 0 || current_id == 3 || current_id == 6
+		if current_square_index == 0 || current_square_index == 3 || current_square_index == 6
 			# Square.id == arr.index
-			i_plus_1 = arr[ current_id + 1 ]
-			i_plus_2 = arr[ current_id + 2 ]
+			i_plus_1 = arr[ current_square_index + 1 ]
+			i_plus_2 = arr[ current_square_index + 2 ]
 			
 			puts "    [#{i.instance_variable_get(:@contents)}][#{i_plus_1.instance_variable_get(:@contents)}][#{i_plus_2.instance_variable_get(:@contents)}]"
 		end
 	end
+	
 	puts "    ---------"
 	line_break
 end
@@ -400,7 +401,7 @@ def play_game(player)
 	else
 		puts "Player 2:"
 	end
-	
+
 	player_2.index
 
 	# Build tic-tac-toe board
@@ -422,7 +423,7 @@ def play_game(player)
 		if winner?(board)
 			puts "...!!!"
 			line_break
-			puts "Congratulations, #{player.instance_variable_get(:@name)}! Your ferocious swinging of the \"#{player.instance_variable_get(:@weapon)}\" has lead you to victory."
+			puts "Congratulations, #{player.instance_variable_get(:@name)}! Your ferocious use of the \"#{player.instance_variable_get(:@weapon)}\" has lead you to victory."
 			puts "--Well done. Press enter to continue."
 			gets
 			# If player 2 won, offer Player 1 position
@@ -442,7 +443,7 @@ def play_game(player)
 			end
 			game_over = true
 		elsif draw?(board)
-			puts "Well. It's a draw..."
+			puts "Well... it's a draw."
 			puts "Good game, though."
 			line_break
 			game_over = true
@@ -458,13 +459,13 @@ def play_game(player)
 	else
 		line_break
 		puts "Ok. Thanks for playing!"
-		que_music(true)
+		cue_music(true)
 	end
 		
 end
 
 # --------------------------------- STORY STARTS HERE ---------------------------------
-que_music
+cue_music
 
 puts "Hi! Welcome to tic-tac-toe."
 

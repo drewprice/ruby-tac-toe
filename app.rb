@@ -190,9 +190,6 @@ def create_player(id, other_players_weapon=nil, name=nil)
 	elsif weapon == other_players_weapon
 		puts "Holdup holdup holdup. You can't have the same weapon!"
 		create_player(id, other_players_weapon, name)
-	else
-		puts "Somethine strange happened... let's try that again."
-		create_player(id, other_players_weapon, name)
 	end
 end
 
@@ -207,20 +204,17 @@ end
 
 def choose_weapon(name)
 	puts "--Alright #{name}, choose your weapon. Any non-numeric character will do."
-	response = gets.chomp
+	response = gets.chomp.strip.slice(0)
 
-	if response == "" || response == " "
+	if response.nil?
 		puts "Sorry, invisible weapons don't count."
 		choose_weapon(name)
+	elsif response.is_i?
+		line_break
+		puts "Nah. No numbers."
+		choose_weapon(name)
 	else
-		response = response.slice(0)
-		if response.is_i?
-			line_break
-			puts "Nah. No numbers."
-			choose_weapon(name)
-		else
-			response
-		end
+		response
 	end
 end
 

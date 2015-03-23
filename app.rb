@@ -5,6 +5,20 @@ class String
 	end
 end
 
+class Game
+	# Game methods & variables...
+	# Possibly some of these? Not sure yet...
+	# @player_1
+	# @player_2
+	# @game_board
+
+	# misc methods
+	# play_game
+	# grid methods
+	# turn methods
+	# robot methods
+end
+
 class Player
 	attr_accessor :name, :weapon, :robot
 
@@ -30,8 +44,8 @@ class Square
 		@occupied = false
 	end
 end
-# --------------------------------- METHODS ---------------------------------
 
+# --------------------------------- METHODS ---------------------------------
 # •••• Misc methods ••••
 
 def line_break
@@ -162,15 +176,10 @@ def first_view(game_board)
 	gets
 end
 
-
 # •••• Create player methods ••••
 
-def create_player(name=nil, other_player_weapon=nil)
+def create_player(name, other_player_weapon=nil)
 
-	if name.nil?
-		puts "--Player 2, what's your name?"
-		name = choose_name
-	end
 
 	weapon = choose_weapon(name)
 	line_break
@@ -234,7 +243,16 @@ def verify_weapon(robot_weapon, player_1_weapon)
 end
 
 def robot_choice(game_board)
+	# if # Robot is in a winning position
+	# 	choice = # Go for the win
+	# elsif # Player 1 is in a winning position
+	# 	choice = # Block player 1
+	# else
+	# 	choice = rand(9)
+	# end
+
 	choice = rand(9)
+
 	if valid_choice?(choice, game_board)
 		choice
 	else
@@ -314,15 +332,53 @@ def winner?(game_board)
 	
 end
 
-def draw?(game_board)
-	# Unless a square is unoccupied, it's a draw
-	draw = true
-	game_board.each do |square|
-		if !(square.occupied)
-			draw = false
-		end
+def winning_position?(game_board)
+	zero = game_board[0].contents
+	one = game_board[1].contents
+	two = game_board[2].contents
+	three = game_board[3].contents
+	four = game_board[4].contents
+	five = game_board[5].contents
+	six = game_board[6].contents
+	seven = game_board[7].contents
+	eight = game_board[8].contents
+
+	zero_is_occupied = game_board[0].occupied
+	one_is_occupied = game_board[1].occupied
+	two_is_occupied = game_board[2].occupied
+	three_is_occupied = game_board[3].occupied
+	four_is_occupied = game_board[4].occupied
+	five_is_occupied = game_board[5].occupied
+	six_is_occupied = game_board[6].occupied
+	seven_is_occupied = game_board[7].occupied
+	eight_is_occupied = game_board[8].occupied
+
+
+	# [0][1][2]
+	# [3][4][5]
+	# [6][7][8]
+
+
+	if 	( zero == one 	 && !two_is_occupied 	) ||
+		( zero == four 	 && !eight_is_occupied 	) ||
+		( zero == three  && !six_is_occupied 	) ||
+		( one == two 	 && !zero_is_occupied 	) ||
+		( one == four 	 && !seven_is_occupied 	) ||
+		( two == four  	 && !six_is_occupied 	) ||
+		( two == five 	 && !eight_is_occupied 	) ||
+		( three == six 	 && !zero_is_occupied 	) ||
+		( three == four  && !five_is_occupied 	) ||
+		( four == five 	 && !three_is_occupied 	) ||
+		( four == six	 && !two_is_occupied 	) ||
+		( four == seven  && !one_is_occupied 	) ||
+		( four == eight  && !zero_is_occupied 	) ||
+		( five == eight  && !two_is_occupied 	) ||
+		( six == seven	 && !eight_is_occupied 	) ||
+		( seven == eight && !six_is_occupied 	)
+		true
+	else
+		false
 	end
-	draw
 end
 
 # •••• The game itself ••••
@@ -340,9 +396,10 @@ def play_game(player_1)
 	if type_of_game == 1
 		player_2 = create_robot(player_1)
 		line_break
-	elsif type_of_game == 2
+	else
 		# Two-Player game
-		player_2 = create_player(nil, player_1.weapon)
+		puts "--Player 2, what's your name?"
+		player_2 = create_player(choose_name, player_1.weapon)
 
 		# Take care of players with the same name
 		if player_1.name == player_2.name
@@ -354,11 +411,7 @@ def play_game(player_1)
 	puts "Player 1:"
 	player_1.index
 
-	if player_2.robot
-		puts "Robot:"
-	else
-		puts "Player 2:"
-	end
+	puts player_2.robot ? "Robot:" : "Player 2:"
 	player_2.index
 
 	# --- Build tic-tac-toe game board ---
@@ -368,50 +421,55 @@ def play_game(player_1)
 	# --- Take turns ---
 	turn_counter = 0
 	while !game_over do
+
 		# -- Determine whose turn it is --
-		if turn_counter.even?
-			player = player_1
-		else
-			player = player_2
-		end
+		player = turn_counter.even? ? player_1 : player_2
 
 		take_turn(player, game_board)
-		
-		if winner?(game_board)
 
-			puts "...!!!"
-			line_break
-			
-			puts "Congratulations, #{player.name}! Your ferocious use of the \"#{player.weapon}\" has lead you to victory."
-			puts "--Well done. Press enter to continue."
-			gets
-			
-			# - If player 2 won, offer position of Player 1 -
-			if player == player_2 && !(player_2.robot)
-				puts "#{player.name}, you have earned the right to claim the Player 1 position."
-				puts "--Will you take it?"
+		# Check for winner after 3 turns by player_1
+		if turn_counter > 3
+			if winner?(game_board)
 
-				if get_a_yes?
-					player_1 = player_2
-					line_break
-					puts "#{player.name} is now Player One!"
-					line_break
-				else
-					line_break
-					puts "Ok. By your grace, #{player_1.name} will remain Player 1."
-					line_break
+				puts "...!!!"
+				line_break
+				
+				puts "Congratulations, #{player.name}! Your ferocious use of the \"#{player.weapon}\" has lead you to victory."
+				puts "--Well done. Press enter to continue."
+				gets
+				
+				# - If player 2 won, offer position of Player 1 -
+				if player == player_2 && !(player_2.robot)
+					puts "#{player.name}, you have earned the right to claim the Player 1 position."
+					puts "--Will you take it?"
+
+					if get_a_yes?
+						player_1 = player_2
+						line_break
+						puts "#{player.name} is now Player One!"
+						line_break
+					else
+						line_break
+						puts "Ok. By your grace, #{player_1.name} will remain Player 1."
+						line_break
+					end
 				end
+
+				game_over = true
+				break
 			end
+		end
 
-			game_over = true
+		turn_counter += 1
 
-		elsif draw?(game_board)
-			puts "Well... it's a draw."
-			puts "Good game, though."
-			line_break
-			game_over = true
-		else
-			turn_counter += 1
+		# Check for a draw
+		if turn_counter > 6
+			if !winning_position?(game_board)
+				puts "Well... it's a draw."
+				puts "Good game, though."
+				line_break
+				game_over = true
+			end
 		end
 	end
 
